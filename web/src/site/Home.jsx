@@ -1,9 +1,31 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { paragraphs, sortProjects, useSite } from '../lib/useSite';
 import { Footer, Nav } from './Chrome';
 import ProjectCard from './ProjectCard';
 
 const HeroScene = lazy(() => import('./HeroScene'));
+
+// If the 3D scene fails (no GPU access, lost context, chunk failed to load), show the CSS galaxy instead.
+class SceneBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+// A CSS-only galaxy for browsers without WebGL 2: same look, no interaction.
+function GalaxyFallback() {
+  return (
+    <div className="galaxy-fallback" aria-hidden="true">
+      <div className="gf-disc" />
+      <div className="gf-core" />
+      {[0, 1, 2, 3, 4].map((i) => <span key={i} className={`gf-orbit gf-orbit-${i}`}><i /></span>)}
+    </div>
+  );
+}
 
 function hasWebGL() {
   try {
@@ -66,11 +88,13 @@ function Hero({ profile, projects }) {
 
   return (
     <section className="hero" ref={ref} id="top">
-      {webgl && (
-        <Suspense fallback={null}>
-          <HeroScene projects={featured} active={visible} onOpen={(slug) => { window.location.hash = `/projects/${slug}`; }} />
-        </Suspense>
-      )}
+      {webgl ? (
+        <SceneBoundary fallback={<GalaxyFallback />}>
+          <Suspense fallback={<GalaxyFallback />}>
+            <HeroScene projects={featured} active={visible} onOpen={(slug) => { window.location.hash = `/projects/${slug}`; }} />
+          </Suspense>
+        </SceneBoundary>
+      ) : <GalaxyFallback />}
       <div className="hero-fade" />
       <div className="container hero-content">
         {profile.availability && <p className="availability"><span className="pulse" />{profile.availability}</p>}

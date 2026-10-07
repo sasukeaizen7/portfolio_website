@@ -168,3 +168,22 @@
   .contact-card { padding: 44px 20px; }
   .case-hero { padding-top: 104px; }
 }
+
+/* CSS-only galaxy: shown when the browser can't run the 3D scene */
+.galaxy-fallback { position: absolute; top: 50%; left: 70%; width: min(1000px, 120vw); aspect-ratio: 1; transform: translate(-50%, -50%) perspective(1400px) rotateX(55deg) rotateZ(-14deg); pointer-events: none; }
+.gf-disc { position: absolute; inset: 0; border-radius: 50%; animation: gf-spin 90s linear infinite;
+  background:
+    radial-gradient(circle, rgba(253, 230, 138, 0.55) 0 4%, transparent 18%),
+    repeating-conic-gradient(from 0deg, rgba(45, 212, 191, 0.32) 0deg 6deg, transparent 14deg 120deg),
+    radial-gradient(circle, rgba(139, 92, 246, 0.35), transparent 70%);
+  -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); filter: blur(6px); }
+.gf-core { position: absolute; left: 50%; top: 50%; width: 9%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: #fde68a; box-shadow: 0 0 60px 30px rgba(251, 191, 36, 0.35); }
+.gf-orbit { position: absolute; left: 50%; top: 50%; border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 50%; transform: translate(-50%, -50%); animation: gf-spin linear infinite; }
+.gf-orbit i { position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; border-radius: 50%; }
+.gf-orbit-0 { width: 34%; aspect-ratio: 1; animation-duration: 26s; } .gf-orbit-0 i { background: #a78bfa; box-shadow: 0 0 18px #a78bfa; }
+.gf-orbit-1 { width: 48%; aspect-ratio: 1; animation-duration: 38s; animation-direction: reverse; } .gf-orbit-1 i { background: #f472b6; box-shadow: 0 0 18px #f472b6; }
+.gf-orbit-2 { width: 62%; aspect-ratio: 1; animation-duration: 52s; } .gf-orbit-2 i { background: #2dd4bf; box-shadow: 0 0 18px #2dd4bf; }
+.gf-orbit-3 { width: 76%; aspect-ratio: 1; animation-duration: 70s; animation-direction: reverse; } .gf-orbit-3 i { background: #60a5fa; box-shadow: 0 0 18px #60a5fa; }
+.gf-orbit-4 { width: 90%; aspect-ratio: 1; animation-duration: 95s; } .gf-orbit-4 i { background: #4ade80; box-shadow: 0 0 18px #4ade80; }
+@keyframes gf-spin { from { rotate: 0deg; } to { rotate: 360deg; } }
+@media (max-width: 760px) { .galaxy-fallback { left: 50%; top: 42%; } }
