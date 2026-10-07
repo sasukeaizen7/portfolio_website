@@ -12,6 +12,7 @@ export function sniffImage(bytes: Buffer): string | null {
   if (starts([0xff, 0xd8, 0xff])) return 'image/jpeg';
   if (starts([0x47, 0x49, 0x46, 0x38])) return 'image/gif';
   if (starts([0x52, 0x49, 0x46, 0x46]) && starts([0x57, 0x45, 0x42, 0x50], 8)) return 'image/webp';
+  if (starts([0x25, 0x50, 0x44, 0x46, 0x2d])) return 'application/pdf'; // %PDF-
   return null;
 }
 
@@ -19,13 +20,16 @@ export function sniffImage(bytes: Buffer): string | null {
 export class ImagesService {
   constructor(@Inject(DB) private readonly db: Db) {}
 
-  async save(bytes: Buffer | undefined) {
+  // `allowPdf`: the CV upload. Project images stay images only.
+  async save(bytes: Buffer | undefined, allowPdf = false) {
     if (!bytes?.length) throw new BadRequestException('No file');
-    if (bytes.length > MAX_IMAGE_BYTES) throw new PayloadTooLargeException('Images are limited to 4 MB');
+    if (bytes.length > MAX_IMAGE_BYTES) throw new PayloadTooLargeException('Files are limited to 4 MB');
     const mime = sniffImage(bytes);
-    if (!mime) throw new BadRequestException('Only PNG, JPEG, WebP and GIF images are accepted');
+    if (!mime || (mime === 'application/pdf' && !allowPdf)) {
+      throw new BadRequestException(allowPdf ? 'Only PDF, PNG, JPEG, WebP and GIF files are accepted' : 'Only PNG, JPEG, WebP and GIF images are accepted');
+    }
     const [row] = await this.db.insert(projectImages).values({ mime, size: bytes.length, bytes }).returning({ id: projectImages.id });
-    return { id: row.id, url: `/api/images/${row.id}` };
+    return { id: row.id, url: `/api/${mime === 'application/pdf' ? 'files' : 'images'}/${row.id}` };
   }
 
   async get(id: string) {

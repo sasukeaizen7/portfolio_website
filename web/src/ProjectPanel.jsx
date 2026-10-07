@@ -28,7 +28,8 @@ export function ProjectPanel({ project, onClose, onPrev, onNext }) {
         )}
         {project.tags?.length > 0 && <div className="tags">{project.tags.map((t) => <span key={t}>{t}</span>)}</div>}
         <div className="panel-links">
-          {project.repoUrl && <a className="btn primary" href={project.repoUrl} target="_blank" rel="noopener noreferrer">View the code</a>}
+          <a className="btn primary" href={`#/projects/${project.slug}`}>Full case study</a>
+          {project.repoUrl && <a className="btn" href={project.repoUrl} target="_blank" rel="noopener noreferrer">View the code</a>}
           {project.demoUrl && <a className="btn" href={project.demoUrl} target="_blank" rel="noopener noreferrer">Live demo</a>}
         </div>
       </div>

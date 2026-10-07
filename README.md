@@ -1,6 +1,6 @@
-# Portfolio: a 3D galaxy of projects
+# Portfolio: Mohamed Abderrahmane Heouaine, AI & Data Engineer
 
-Every project is a planet orbiting a central star; each category gets its own orbit. Click a planet to fly to it and read the details. An admin section adds, edits and removes projects without touching code.
+A one-page professional portfolio (hero with an interactive 3D galaxy, about, experience, projects, skills, education and certifications, contact), a case-study page per project (`#/projects/<slug>`), and every project as a planet in a 3D galaxy (`#/galaxy`). An admin section (`#/admin`) edits the profile, experience, skills and projects, and uploads the photo, project images and the CV (PDF), without touching code.
 
 - **`backend/`**: NestJS 11 API. Postgres in production (Neon), embedded PGlite locally, plain-SQL migrations in `backend/migrations/`.
 - **`web/`**: React 19 + Vite, with three.js through react-three-fiber. The 3D scene is lazy-loaded, and there's a list view for small screens or browsers without WebGL.

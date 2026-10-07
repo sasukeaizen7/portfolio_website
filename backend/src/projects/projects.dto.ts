@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { Transform } from 'class-transformer';
 import {
-  ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsInt, IsOptional, IsString, IsUrl, IsUUID, Length, Matches, Max, MaxLength, Min, ValidateIf,
+  ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUrl, IsUUID, Length, Matches, Max, MaxLength, Min, ValidateIf,
 } from 'class-validator';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
@@ -62,15 +62,36 @@ export class CreateProjectDto {
 
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {}
 
+// Site-relative paths (an uploaded file at /api/files/..., a static /photo.png) or http(s) URLs.
+const LINK = /^(https?:\/\/|\/(?!\/))\S*$/;
+
 export class UpdateProfileDto {
   @Transform(trim) @IsString() @Length(1, 80)
   name: string;
 
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(80)
+  title?: string;
+
   @Transform(trim) @IsString() @MaxLength(160)
   headline: string;
 
-  @Transform(trim) @IsString() @MaxLength(2000)
+  @Transform(trim) @IsString() @MaxLength(4000)
   bio: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(80)
+  location?: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(160)
+  availability?: string;
+
+  @IsOptional() @Transform(trimList) @IsArray() @ArrayMaxSize(10) @IsString({ each: true }) @MaxLength(60, { each: true })
+  languages?: string[];
+
+  @IsOptional() @Transform(emptyToNull) @ValidateIf((_, v) => v !== null) @Matches(LINK) @MaxLength(500)
+  photoUrl?: string | null;
+
+  @IsOptional() @Transform(emptyToNull) @ValidateIf((_, v) => v !== null) @Matches(LINK) @MaxLength(500)
+  cvUrl?: string | null;
 
   @IsOptional() @Transform(emptyToNull) @ValidateIf((_, v) => v !== null) @IsUrl(URL_OPTIONS) @MaxLength(500)
   githubUrl?: string | null;
@@ -81,3 +102,56 @@ export class UpdateProfileDto {
   @IsOptional() @Transform(emptyToNull) @ValidateIf((_, v) => v !== null) @IsEmail() @MaxLength(200)
   contactEmail?: string | null;
 }
+
+export class CreateExperienceDto {
+  @IsIn(['work', 'education', 'certification'])
+  kind: 'work' | 'education' | 'certification';
+
+  @Transform(trim) @IsString() @Length(1, 160)
+  title: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(160)
+  organization?: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(80)
+  location?: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(40)
+  startLabel?: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(40)
+  endLabel?: string;
+
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(1000)
+  summary?: string;
+
+  @IsOptional() @Transform(trimList) @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(300, { each: true })
+  highlights?: string[];
+
+  @IsOptional() @Transform(trimList) @IsArray() @ArrayMaxSize(20) @IsString({ each: true }) @MaxLength(40, { each: true })
+  tags?: string[];
+
+  @IsOptional() @Transform(emptyToNull) @ValidateIf((_, v) => v !== null) @IsUrl(URL_OPTIONS) @MaxLength(500)
+  url?: string | null;
+
+  @IsOptional() @IsBoolean()
+  published?: boolean;
+
+  @IsOptional() @IsInt() @Min(-10_000) @Max(10_000)
+  sortOrder?: number;
+}
+
+export class UpdateExperienceDto extends PartialType(CreateExperienceDto) {}
+
+export class CreateSkillGroupDto {
+  @Transform(trim) @IsString() @Length(1, 60)
+  name: string;
+
+  @IsOptional() @Transform(trimList) @IsArray() @ArrayMaxSize(40) @IsString({ each: true }) @MaxLength(40, { each: true })
+  items?: string[];
+
+  @IsOptional() @IsInt() @Min(-10_000) @Max(10_000)
+  sortOrder?: number;
+}
+
+export class UpdateSkillGroupDto extends PartialType(CreateSkillGroupDto) {}

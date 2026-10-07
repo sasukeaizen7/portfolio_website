@@ -84,7 +84,7 @@ export class ProjectsService {
   }
 
   async updateProfile(input: UpdateProfileDto) {
-    const values = { githubUrl: null, linkedinUrl: null, contactEmail: null, ...input };
+    const values = { githubUrl: null, linkedinUrl: null, contactEmail: null, photoUrl: null, cvUrl: null, ...input };
     await this.db.update(profile).set({ ...values, updatedAt: new Date() }).where(eq(profile.id, 1));
     return this.getProfile();
   }

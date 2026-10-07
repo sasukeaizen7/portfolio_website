@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import ExperienceAdmin from './ExperienceAdmin';
 import ProfileForm from './ProfileForm';
 import ProjectForm from './ProjectForm';
+import SkillsAdmin from './SkillsAdmin';
 
 export default function AdminApp() {
   const [admin, setAdmin] = useState(undefined); // undefined = checking, null = signed out
@@ -51,7 +53,7 @@ function Login({ onSignedIn }) {
 }
 
 function Dashboard({ admin, onSignedOut }) {
-  const [tab, setTab] = useState('projects');
+  const [tab, setTab] = useState('profile');
   const [projects, setProjects] = useState(null);
   const [editing, setEditing] = useState(null); // a project, {} for a new one, or null
   const [error, setError] = useState(null);
@@ -92,8 +94,9 @@ function Dashboard({ admin, onSignedOut }) {
       <header className="admin-header">
         <h1>Portfolio admin</h1>
         <nav className="toggle">
-          <button className={tab === 'projects' ? 'on' : ''} onClick={() => setTab('projects')}>Projects</button>
-          <button className={tab === 'profile' ? 'on' : ''} onClick={() => setTab('profile')}>Profile</button>
+          {[['profile', 'Profile'], ['experience', 'Experience'], ['skills', 'Skills'], ['projects', 'Projects']].map(([id, label]) => (
+            <button key={id} className={tab === id ? 'on' : ''} onClick={() => { setTab(id); setEditing(null); }}>{label}</button>
+          ))}
         </nav>
         <span className="grow" />
         <a className="btn" href="#/">View site</a>
@@ -104,6 +107,8 @@ function Dashboard({ admin, onSignedOut }) {
       {error && <p className="error" role="alert" onClick={() => setError(null)}>{error}</p>}
 
       {tab === 'profile' && <ProfileForm />}
+      {tab === 'experience' && <ExperienceAdmin onAuthError={onSignedOut} />}
+      {tab === 'skills' && <SkillsAdmin />}
 
       {tab === 'projects' && (editing ? (
         <ProjectForm

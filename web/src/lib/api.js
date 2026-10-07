@@ -29,6 +29,21 @@ async function request(method, path, { json, form } = {}) {
 export const api = {
   projects: () => request('GET', '/projects'),
   profile: () => request('GET', '/profile'),
+  experiences: () => request('GET', '/experiences'),
+  skills: () => request('GET', '/skills'),
+
+  adminExperiences: () => request('GET', '/admin/experiences'),
+  createExperience: (input) => request('POST', '/admin/experiences', { json: input }),
+  updateExperience: (id, input) => request('PATCH', `/admin/experiences/${id}`, { json: input }),
+  deleteExperience: (id) => request('DELETE', `/admin/experiences/${id}`),
+  createSkillGroup: (input) => request('POST', '/admin/skills', { json: input }),
+  updateSkillGroup: (id, input) => request('PATCH', `/admin/skills/${id}`, { json: input }),
+  deleteSkillGroup: (id) => request('DELETE', `/admin/skills/${id}`),
+  uploadFile: (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request('POST', '/admin/files', { form });
+  },
 
   me: () => request('GET', '/auth/me'),
   login: (email, password) => request('POST', '/auth/login', { json: { email, password } }),

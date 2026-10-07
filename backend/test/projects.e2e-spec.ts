@@ -17,11 +17,14 @@ describe('projects', () => {
 
   it('serves the seeded projects and profile publicly', async () => {
     const { body } = await http().get('/api/projects').expect(200);
-    expect(body).toHaveLength(29);
-    expect(new Set(body.map((p: { category: string }) => p.category))).toEqual(new Set(['Data pipelines', 'SQL analytics']));
+    expect(body).toHaveLength(32);
+    expect(new Set(body.map((p: { category: string }) => p.category)))
+      .toEqual(new Set(['AI & Computer Vision', 'Data Engineering', 'SQL & Analytics', 'Web & Software']));
+    expect(body.some((p: { period: string }) => /day/i.test(p.period))).toBe(false);
     const velib = (await http().get('/api/projects/velib-live-pipeline').expect(200)).body;
     expect(velib).toMatchObject({ title: "Vélib' Paris: live pipeline", featured: true, imageUrl: null });
-    expect((await http().get('/api/profile').expect(200)).body).toMatchObject({ name: 'sasukeaizen7', githubUrl: 'https://github.com/sasukeaizen7' });
+    expect((await http().get('/api/profile').expect(200)).body)
+      .toMatchObject({ name: 'Mohamed Abderrahmane Heouaine', title: 'AI & Data Engineer', location: 'Paris, France', photoUrl: '/photo.png' });
   });
 
   it('creates, edits and deletes a project; drafts stay private', async () => {
@@ -74,9 +77,47 @@ describe('projects', () => {
   });
 
   it('updates the profile', async () => {
-    const body = { name: 'Me', headline: 'Data engineer', bio: 'Hello', githubUrl: 'https://github.com/me', linkedinUrl: '', contactEmail: 'me@example.com' };
-    expect((await http().put('/api/admin/profile').set(admin).send(body).expect(200)).body)
-      .toEqual({ name: 'Me', headline: 'Data engineer', bio: 'Hello', githubUrl: 'https://github.com/me', linkedinUrl: null, contactEmail: 'me@example.com' });
+    const body = {
+      name: 'Me', title: 'Engineer', headline: 'Data engineer', bio: 'Hello', location: 'Lyon', availability: 'Open',
+      languages: ['French', ' English '], photoUrl: '/api/images/x', cvUrl: '', githubUrl: 'https://github.com/me', linkedinUrl: '', contactEmail: 'me@example.com',
+    };
+    expect((await http().put('/api/admin/profile').set(admin).send(body).expect(200)).body).toEqual({
+      ...body, languages: ['French', 'English'], cvUrl: null, linkedinUrl: null,
+    });
     await http().put('/api/admin/profile').set(admin).send({ ...body, contactEmail: 'not-an-email' }).expect(400);
+    await http().put('/api/admin/profile').set(admin).send({ ...body, photoUrl: 'javascript:alert(1)' }).expect(400);
+    await http().put('/api/admin/profile').set(admin).send({ ...body, cvUrl: '//evil.example/cv.pdf' }).expect(400);
+  });
+
+  it('serves experience and skills, and lets the admin manage them', async () => {
+    const list = (await http().get('/api/experiences').expect(200)).body;
+    expect(list.filter((e: { kind: string }) => e.kind === 'work')).toHaveLength(3);
+    expect(list.filter((e: { kind: string }) => e.kind === 'certification')).toHaveLength(4);
+    expect((await http().get('/api/skills').expect(200)).body.map((g: { name: string }) => g.name)[0]).toBe('AI & Machine Learning');
+
+    await http().post('/api/admin/experiences').send({ kind: 'work', title: 'x' }).expect(401);
+    await http().post('/api/admin/experiences').set(admin).send({ kind: 'hobby', title: 'x' }).expect(400);
+    const job = (await http().post('/api/admin/experiences').set(admin)
+      .send({ kind: 'work', title: 'Freelance AI engineer', startLabel: '2026', endLabel: 'Present', highlights: ['a', ''], published: false }).expect(201)).body;
+    expect(job).toMatchObject({ highlights: ['a'], published: false });
+    expect((await http().get('/api/experiences').expect(200)).body.some((e: { id: string }) => e.id === job.id)).toBe(false);
+    await http().patch(`/api/admin/experiences/${job.id}`).set(admin).send({ published: true }).expect(200);
+    expect((await http().get('/api/experiences').expect(200)).body.some((e: { id: string }) => e.id === job.id)).toBe(true);
+    await http().delete(`/api/admin/experiences/${job.id}`).set(admin).expect(204);
+
+    const group = (await http().post('/api/admin/skills').set(admin).send({ name: 'Tools', items: ['Git', ' Docker '] }).expect(201)).body;
+    expect(group.items).toEqual(['Git', 'Docker']);
+    await http().patch(`/api/admin/skills/${group.id}`).set(admin).send({ items: ['Git'] }).expect(200);
+    await http().delete(`/api/admin/skills/${group.id}`).set(admin).expect(204);
+  });
+
+  it('accepts a PDF CV on the files endpoint only, served as a download', async () => {
+    const pdf = Buffer.from('%PDF-1.4\n%fake but sniffable\n');
+    await http().post('/api/admin/images').set(admin).attach('file', pdf, 'cv.pdf').expect(400);
+    const { body } = await http().post('/api/admin/files').set(admin).attach('file', pdf, 'cv.pdf').expect(201);
+    expect(body.url).toMatch(/^\/api\/files\//);
+    const res = await http().get(body.url).expect(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toMatch(/attachment/);
   });
 });

@@ -169,3 +169,13 @@ label.check input { width: auto; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* admin additions: experience groups, skills rows, avatar preview */
+.admin-group { margin-bottom: 32px; }
+.skill-row { display: grid; grid-template-columns: 200px 1fr 80px auto auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.avatar-preview { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+select { font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; }
+@media (max-width: 720px) {
+  .skill-row { grid-template-columns: 1fr 70px; }
+  .skill-row .skill-items { grid-column: 1 / -1; grid-row: 2; }
+}
