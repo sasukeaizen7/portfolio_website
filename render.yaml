@@ -1,0 +1,29 @@
+# Render blueprint for the portfolio API (NestJS). The web app is deployed on Vercel and
+# forwards /api/* here (see web/vercel.json), so the browser only ever talks to the Vercel domain.
+services:
+  - type: web
+    name: sasukeaizen7-portfolio-api
+    runtime: node
+    plan: free
+    region: ohio            # put it in the same region as the Neon database
+    rootDir: backend
+    # NODE_ENV=production would make `npm ci` skip devDependencies, but the build needs the Nest CLI.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TRUST_PROXY_HOPS
+        value: "2"            # browser -> Vercel rewrite -> Render proxy -> app
+      - key: DATABASE_URL     # Neon connection string, ending in ?sslmode=verify-full
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH  # from `npm run hash-password` in backend/
+        sync: false
